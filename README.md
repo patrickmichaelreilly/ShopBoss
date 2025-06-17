@@ -48,3 +48,5 @@ cd importer\bin\Release\net8.0\win-x86\publish
 **Output:** JSON with six top-level keys: `products`, `parts`, `placedSheets`, `hardware`, `subassemblies`, `optimizationResults`.
 
 Development tasks are tracked in `Worklog.md`.
+
+<!-- AI Code Agent will append: **Status: Completed – Importer staged to C:\ShopBoss\Importer** -->
