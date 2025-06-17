@@ -13,7 +13,6 @@ public class SdfToSqliteConverter
 
     public async Task<string> ConvertAsync(string sdfPath)
     {
-        Console.WriteLine($"Debug: ConvertAsync called with sdfPath: '{sdfPath}'");
         
         if (!File.Exists(sdfPath))
         {
@@ -21,20 +20,16 @@ public class SdfToSqliteConverter
         }
 
         var sdfDirectory = Path.GetDirectoryName(sdfPath);
-        Console.WriteLine($"Debug: sdfDirectory from Path.GetDirectoryName: '{sdfDirectory}'");
         
         if (string.IsNullOrEmpty(sdfDirectory))
         {
             // If no directory in path, use current directory
             sdfDirectory = Directory.GetCurrentDirectory();
-            Console.WriteLine($"Debug: Using current directory: '{sdfDirectory}'");
         }
 
         var sqliteFilePath = Path.Combine(sdfDirectory, "work.sqlite");
         var tempSqlPath = Path.Combine(sdfDirectory, "temp.sql");
         
-        Console.WriteLine($"Debug: sqliteFilePath: '{sqliteFilePath}'");
-        Console.WriteLine($"Debug: tempSqlPath: '{tempSqlPath}'");
 
         try
         {
@@ -68,9 +63,6 @@ public class SdfToSqliteConverter
         var connectionString = $"Data Source={sdfPath};";
         var baseWorkPath = Path.Combine(workingDirectory, "work");
         
-        Console.WriteLine($"Debug: connectionString: '{connectionString}'");
-        Console.WriteLine($"Debug: baseWorkPath: '{baseWorkPath}'");
-        Console.WriteLine($"Debug: workingDirectory: '{workingDirectory}'");
         
         using var process = new Process();
         process.StartInfo.FileName = exportTool;
@@ -109,19 +101,12 @@ public class SdfToSqliteConverter
             throw new ArgumentException("Output path cannot be null or empty", nameof(outputPath));
         }
 
-        Console.WriteLine($"Debug: Looking for work_* files in directory: {directory}");
-        Console.WriteLine($"Debug: Output path: {outputPath}");
 
         var workFiles = Directory.GetFiles(directory, "work_*")
                                 .Where(f => !Path.HasExtension(f) || Path.GetExtension(f) == ".sql")
                                 .OrderBy(f => f)
                                 .ToArray();
 
-        Console.WriteLine($"Debug: Found {workFiles.Length} work files");
-        foreach (var file in workFiles)
-        {
-            Console.WriteLine($"Debug: Found file: {file}");
-        }
 
         if (workFiles.Length == 0)
         {
@@ -132,17 +117,16 @@ public class SdfToSqliteConverter
         
         foreach (var workFile in workFiles)
         {
-            Console.WriteLine($"Debug: Processing file: {workFile}");
             var content = await File.ReadAllTextAsync(workFile);
             await outputWriter.WriteAsync(content);
             await outputWriter.WriteLineAsync(); // Add newline between files
             
             // Clean up the work file
             File.Delete(workFile);
-            Console.WriteLine($"Debug: Deleted file: {workFile}");
         }
         
-        Console.WriteLine($"Debug: Combined SQL written to: {outputPath}");
+        await outputWriter.FlushAsync();
+        
     }
 
     private async Task CreateSqliteFromScript(string sqlPath, string sqliteFilePath)
