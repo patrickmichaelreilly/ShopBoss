@@ -1,0 +1,76 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/patrick/ShopBoss/importer/importer.csproj": {}
+  },
+  "projects": {
+    "/home/patrick/ShopBoss/importer/importer.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/patrick/ShopBoss/importer/importer.csproj",
+        "projectName": "importer",
+        "projectPath": "/home/patrick/ShopBoss/importer/importer.csproj",
+        "packagesPath": "/home/patrick/.nuget/packages/",
+        "outputPath": "/home/patrick/ShopBoss/importer/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/patrick/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.SqlServer.Compact": {
+              "target": "Package",
+              "version": "[4.0.8876.1, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[9.0.6, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.411/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
