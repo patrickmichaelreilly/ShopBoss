@@ -25,4 +25,4 @@
 
 **Out of Scope** – Web UI, racks, assembly/shipping, CE native-DLL debugging.
 
-<!-- AI Code Agent will append: **Status: Completed – …** -->
+**Status: Completed** – Replaced direct SQL CE access with SQLite converter wrapper. Created `SdfToSqliteConverter` class that shells out to Erik EJ's `ExportSqlCE40.exe` tool. Updated project to use `System.Data.SQLite` instead of `Microsoft.SqlServer.Compact`. The importer now accepts both `.sdf` files (automatically converted) and `.sqlite` files (direct import). Added `/tools/` directory with placeholder for ExportSqlCE40.exe. Updated README.md with new workflow and Erik EJ tool source link. No native CE DLL dependencies required.

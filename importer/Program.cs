@@ -1,5 +1,5 @@
 using System.Data;
-using System.Data.SqlServerCe;
+using System.Data.SQLite;
 using System.Text.Json;
 
 namespace SdfImporter;
@@ -18,21 +18,21 @@ public class Program
             
             if (args.Length != 1)
             {
-                Console.Error.WriteLine("Usage: dotnet run -- <path-to-sdf-file>");
+                Console.Error.WriteLine("Usage: dotnet run -- <path-to-sdf-or-sqlite-file>");
                 Console.Error.WriteLine("       dotnet run -- --self-check");
                 return 1;
             }
 
-            string sdfPath = args[0];
+            string filePath = args[0];
             
-            if (!File.Exists(sdfPath))
+            if (!File.Exists(filePath))
             {
-                Console.Error.WriteLine($"File not found: {sdfPath}");
+                Console.Error.WriteLine($"File not found: {filePath}");
                 return 1;
             }
 
             var importer = new SdfImporter();
-            var result = await importer.ImportAsync(sdfPath);
+            var result = await importer.ImportAsync(filePath);
             
             var json = JsonSerializer.Serialize(result, new JsonSerializerOptions 
             { 
@@ -61,11 +61,27 @@ public class Program
 
 public class SdfImporter
 {
-    public async Task<ImportResult> ImportAsync(string sdfPath)
+    private readonly SdfToSqliteConverter _converter = new();
+
+    public async Task<ImportResult> ImportAsync(string filePath)
     {
-        var connectionString = $"Data Source={sdfPath};";
+        string sqliteFilePath;
         
-        using var connection = new SqlCeConnection(connectionString);
+        // Check if input is SDF or SQLite
+        if (Path.GetExtension(filePath).ToLowerInvariant() == ".sdf")
+        {
+            // Convert SDF to SQLite
+            sqliteFilePath = await _converter.ConvertAsync(filePath);
+        }
+        else
+        {
+            // Assume it's already SQLite
+            sqliteFilePath = filePath;
+        }
+        
+        var connectionString = $"Data Source={sqliteFilePath};Version=3;";
+        
+        using var connection = new SQLiteConnection(connectionString);
         await connection.OpenAsync();
         
         return new ImportResult
@@ -79,13 +95,13 @@ public class SdfImporter
         };
     }
     
-    private async Task<List<Dictionary<string, object?>>> ReadTableAsync(SqlCeConnection connection, string tableName)
+    private async Task<List<Dictionary<string, object?>>> ReadTableAsync(SQLiteConnection connection, string tableName)
     {
         var results = new List<Dictionary<string, object?>>();
         
         try
         {
-            using var command = new SqlCeCommand($"SELECT * FROM [{tableName}]", connection);
+            using var command = new SQLiteCommand($"SELECT * FROM [{tableName}]", connection);
             using var reader = await command.ExecuteReaderAsync();
             
             var columnNames = new string[reader.FieldCount];
@@ -105,7 +121,7 @@ public class SdfImporter
                 results.Add(row);
             }
         }
-        catch (SqlCeException ex)
+        catch (SQLiteException ex)
         {
             // Handle table not found gracefully
             Console.Error.WriteLine($"Warning: Table '{tableName}' not found or error reading: {ex.Message}");
