@@ -24,4 +24,4 @@
 
 **Out of Scope** – Schema migrations, Entity Framework, persistent DB, web server, rack logic, assembly/shipping features.
 
-<!-- AI Code Agent will append: **Status: Completed – …** -->
+**Status: Completed** – All six SQL CE 4.0 native DLLs (`sqlcecompact40.dll`, `sqlceca40.dll`, `sqlcese40.dll`, `sqlceqp40.dll`, `sqlceme40.dll`, `sqlceer40EN.dll`) are now automatically included in the publish output directory alongside `Importer.exe`. Updated README.md with complete DLL list and VC++ 2010 SP1 redistributable requirement. Native DLLs stored in `importer/native/` folder and deployed via simplified `*.dll` pattern in project file.

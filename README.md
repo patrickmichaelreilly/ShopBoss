@@ -24,7 +24,15 @@ cd importer\bin\Release\net8.0\win-x64\publish
 .\Importer.exe --self-check
 ```
 
-**SQL CE Requirements:** The required SQL Server Compact native DLLs (`sqlcese40.dll`, `sqlceqp40.dll`, `sqlceer40EN.dll`) are automatically included in the publish output.
+**SQL CE Requirements:** All required SQL Server Compact 4.0 native DLLs are automatically included in the publish output:
+- `sqlcecompact40.dll`
+- `sqlceca40.dll` 
+- `sqlcese40.dll`
+- `sqlceqp40.dll`
+- `sqlceme40.dll`
+- `sqlceer40EN.dll`
+
+The target Windows system requires [Microsoft Visual C++ 2010 Service Pack 1 Redistributable Package (x64)](https://www.microsoft.com/en-us/download/details.aspx?id=13523).
 
 **Output:** JSON with six top-level keys: `products`, `parts`, `placedSheets`, `hardware`, `subassemblies`, `optimizationResults`.
 

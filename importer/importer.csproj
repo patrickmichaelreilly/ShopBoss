@@ -18,20 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(PkgMicrosoft_SqlServer_Compact)\NativeBinaries\amd64\sqlcese40.dll">
+    <None Include="native\*.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </None>
-    <None Include="$(PkgMicrosoft_SqlServer_Compact)\NativeBinaries\amd64\sqlceqp40.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </None>
-    <None Include="$(PkgMicrosoft_SqlServer_Compact)\NativeBinaries\amd64\sqlceer40EN.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <Link>%(Filename)%(Extension)</Link>
     </None>
   </ItemGroup>
 
