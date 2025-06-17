@@ -52,10 +52,13 @@ public class SdfToSqliteConverter
         }
 
         var connectionString = $"Data Source={sdfPath};";
+        var sdfDirectory = Path.GetDirectoryName(sdfPath) ?? throw new InvalidOperationException("Cannot determine SDF directory");
+        var sdfFileName = Path.GetFileNameWithoutExtension(sdfPath);
+        var baseWorkPath = Path.Combine(sdfDirectory, $"{sdfFileName}_work");
         
         using var process = new Process();
         process.StartInfo.FileName = exportTool;
-        process.StartInfo.Arguments = $"\"{connectionString}\" \"{sqlPath}\" sqlite";
+        process.StartInfo.Arguments = $"\"{connectionString}\" \"{baseWorkPath}\"";
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
@@ -73,9 +76,32 @@ public class SdfToSqliteConverter
             throw new InvalidOperationException($"ExportSqlCe40.exe failed with exit code {process.ExitCode}. Error: {error}");
         }
 
-        if (!File.Exists(sqlPath))
+        // ExportSqlCe40.exe creates files like work_0000.sql, work_0001.sql, etc.
+        // We need to combine them into a single temp.sql file
+        await CombineSqlFiles(sdfDirectory, sdfFileName, sqlPath);
+    }
+
+    private async Task CombineSqlFiles(string directory, string baseName, string outputPath)
+    {
+        var workFiles = Directory.GetFiles(directory, $"{baseName}_work_*.sql")
+                                .OrderBy(f => f)
+                                .ToArray();
+
+        if (workFiles.Length == 0)
         {
-            throw new InvalidOperationException($"Expected SQL file was not created: {sqlPath}");
+            throw new InvalidOperationException($"No SQL files found with pattern {baseName}_work_*.sql");
+        }
+
+        using var outputWriter = new StreamWriter(outputPath);
+        
+        foreach (var workFile in workFiles)
+        {
+            var content = await File.ReadAllTextAsync(workFile);
+            await outputWriter.WriteAsync(content);
+            await outputWriter.WriteLineAsync(); // Add newline between files
+            
+            // Clean up the work file
+            File.Delete(workFile);
         }
     }
 

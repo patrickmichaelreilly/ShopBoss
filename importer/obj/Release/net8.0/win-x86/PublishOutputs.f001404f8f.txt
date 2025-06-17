@@ -5,7 +5,11 @@
 /home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/native/sqlceme40.dll
 /home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/native/sqlceqp40.dll
 /home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/native/sqlcese40.dll
-/home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/native/ExportSqlCE40.exe
+/home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/native/ExportSqlCe40.exe
+/home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/native/sqldiff.exe
+/home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/native/sqlite3.exe
+/home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/native/sqlite3_analyzer.exe
+/home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/native/sqlite3_rsync.exe
 /home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/Importer.dll
 /home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/Importer.deps.json
 /home/patrick/ShopBoss/importer/bin/Release/net8.0/win-x86/publish/Importer.runtimeconfig.json
