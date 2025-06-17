@@ -36,7 +36,10 @@ public class SdfToSqliteConverter
             // Step 1: Convert SDF to SQL script using ExportSqlCE40.exe
             await ConvertSdfToSqlScript(sdfPath, tempSqlPath, sdfDirectory);
 
-            // Step 2: Create SQLite database from SQL script
+            // Step 2: Clean up SQL file to fix SQLite compatibility issues
+            await CleanSqlForSqlite(tempSqlPath);
+
+            // Step 3: Create SQLite database from SQL script
             await CreateSqliteFromScript(tempSqlPath, sqliteFilePath);
 
             return sqliteFilePath;
@@ -139,6 +142,32 @@ public class SdfToSqliteConverter
         
         await outputWriter.FlushAsync();
         
+    }
+
+    private async Task CleanSqlForSqlite(string sqlPath)
+    {
+        // Read the entire SQL file
+        var content = await File.ReadAllTextAsync(sqlPath);
+        
+        // Fix common SQL Server Compact -> SQLite compatibility issues
+        content = content
+            // Replace N'' (empty NVARCHAR) with '' (empty string)
+            .Replace("N''", "''")
+            // Replace N'...' (NVARCHAR literals) with '...' (string literals)
+            .Replace("N'", "'")
+            // Replace [bracketed] identifiers with "quoted" identifiers
+            .Replace("[", "\"")
+            .Replace("]", "\"")
+            // Remove SQL Server specific syntax
+            .Replace("IDENTITY(1,1)", "")
+            .Replace("PRIMARY KEY CLUSTERED", "PRIMARY KEY")
+            .Replace("NONCLUSTERED", "")
+            // Handle bit values
+            .Replace("((1))", "1")
+            .Replace("((0))", "0");
+        
+        // Write the cleaned content back
+        await File.WriteAllTextAsync(sqlPath, content);
     }
 
     private async Task CreateSqliteFromScript(string sqlPath, string sqliteFilePath)
