@@ -53,8 +53,7 @@ public class SdfToSqliteConverter
 
         var connectionString = $"Data Source={sdfPath};";
         var sdfDirectory = Path.GetDirectoryName(sdfPath) ?? throw new InvalidOperationException("Cannot determine SDF directory");
-        var sdfFileName = Path.GetFileNameWithoutExtension(sdfPath);
-        var baseWorkPath = Path.Combine(sdfDirectory, $"{sdfFileName}_work");
+        var baseWorkPath = Path.Combine(sdfDirectory, "work");
         
         using var process = new Process();
         process.StartInfo.FileName = exportTool;
@@ -78,18 +77,18 @@ public class SdfToSqliteConverter
 
         // ExportSqlCe40.exe creates files like work_0000.sql, work_0001.sql, etc.
         // We need to combine them into a single temp.sql file
-        await CombineSqlFiles(sdfDirectory, sdfFileName, sqlPath);
+        await CombineSqlFiles(sdfDirectory, sqlPath);
     }
 
-    private async Task CombineSqlFiles(string directory, string baseName, string outputPath)
+    private async Task CombineSqlFiles(string directory, string outputPath)
     {
-        var workFiles = Directory.GetFiles(directory, $"{baseName}_work_*.sql")
+        var workFiles = Directory.GetFiles(directory, "work_*.sql")
                                 .OrderBy(f => f)
                                 .ToArray();
 
         if (workFiles.Length == 0)
         {
-            throw new InvalidOperationException($"No SQL files found with pattern {baseName}_work_*.sql");
+            throw new InvalidOperationException($"No SQL files found with pattern work_*.sql in directory {directory}");
         }
 
         using var outputWriter = new StreamWriter(outputPath);
