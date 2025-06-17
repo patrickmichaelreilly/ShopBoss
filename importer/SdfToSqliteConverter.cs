@@ -25,7 +25,9 @@ public class SdfToSqliteConverter
         
         if (string.IsNullOrEmpty(sdfDirectory))
         {
-            throw new InvalidOperationException("Cannot determine SDF directory - Path.GetDirectoryName returned null/empty");
+            // If no directory in path, use current directory
+            sdfDirectory = Directory.GetCurrentDirectory();
+            Console.WriteLine($"Debug: Using current directory: '{sdfDirectory}'");
         }
 
         var sqliteFilePath = Path.Combine(sdfDirectory, "work.sqlite");
