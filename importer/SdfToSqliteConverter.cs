@@ -43,11 +43,8 @@ public class SdfToSqliteConverter
         }
         finally
         {
-            // Clean up temporary SQL file
-            if (File.Exists(tempSqlPath))
-            {
-                File.Delete(tempSqlPath);
-            }
+            // Keep temp.sql file for inspection - don't delete it
+            // The 28MB temp.sql contains the actual data we need
         }
     }
 
@@ -170,11 +167,15 @@ public class SdfToSqliteConverter
 
         process.Start();
         
+        // Read output streams immediately to prevent deadlock
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
+        
         // Close stdin immediately to prevent hanging
         process.StandardInput.Close();
         
         // Add timeout to prevent hanging
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         try
         {
             await process.WaitForExitAsync(cts.Token);
@@ -187,13 +188,30 @@ public class SdfToSqliteConverter
                 process.Kill();
                 await process.WaitForExitAsync(); // Wait for kill to complete
             }
-            throw new InvalidOperationException("sqlite3 process timed out after 10 seconds");
+            throw new InvalidOperationException("sqlite3 process timed out after 30 seconds - large SQL file may need more time");
         }
+
+        var output = await outputTask;
+        var error = await errorTask;
 
         if (process.ExitCode != 0)
         {
-            var error = await process.StandardError.ReadToEndAsync();
             throw new InvalidOperationException($"sqlite3 failed with exit code {process.ExitCode}. Error: {error}");
+        }
+
+        // Check if the SQLite file was created and has reasonable size
+        if (!File.Exists(sqliteFilePath))
+        {
+            throw new InvalidOperationException("SQLite file was not created");
+        }
+
+        var sqliteSize = new FileInfo(sqliteFilePath).Length;
+        var sqlSize = new FileInfo(sqlPath).Length;
+        
+        // If SQLite file is much smaller than SQL file, something probably went wrong
+        if (sqliteSize < sqlSize / 100) // SQLite should be at least 1% of SQL size
+        {
+            throw new InvalidOperationException($"SQLite file ({sqliteSize} bytes) is suspiciously small compared to SQL file ({sqlSize} bytes). Import may have failed. Check temp.sql file for issues.");
         }
     }
 
