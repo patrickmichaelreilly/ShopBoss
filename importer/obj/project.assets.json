@@ -449,7 +449,7 @@
         }
       }
     },
-    "net8.0/win-x64": {
+    "net8.0/win-x86": {
       "EntityFramework/6.4.4": {
         "type": "package",
         "dependencies": {
@@ -543,13 +543,13 @@
         "type": "package"
       },
       "runtime.win-x64.runtime.native.System.Data.SqlClient.sni/4.4.0": {
-        "type": "package",
-        "native": {
-          "runtimes/win-x64/native/sni.dll": {}
-        }
+        "type": "package"
       },
       "runtime.win-x86.runtime.native.System.Data.SqlClient.sni/4.4.0": {
-        "type": "package"
+        "type": "package",
+        "native": {
+          "runtimes/win-x86/native/sni.dll": {}
+        }
       },
       "Stub.System.Data.SQLite.Core.NetStandard/1.0.119": {
         "type": "package",
@@ -564,7 +564,7 @@
           }
         },
         "native": {
-          "runtimes/win-x64/native/SQLite.Interop.dll": {}
+          "runtimes/win-x86/native/SQLite.Interop.dll": {}
         }
       },
       "System.CodeDom/4.7.0": {
@@ -1818,15 +1818,15 @@
         "warn": true,
         "downloadDependencies": [
           {
-            "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+            "name": "Microsoft.AspNetCore.App.Runtime.win-x86",
             "version": "[8.0.17, 8.0.17]"
           },
           {
-            "name": "Microsoft.NETCore.App.Host.win-x64",
+            "name": "Microsoft.NETCore.App.Host.win-x86",
             "version": "[8.0.17, 8.0.17]"
           },
           {
-            "name": "Microsoft.NETCore.App.Runtime.win-x64",
+            "name": "Microsoft.NETCore.App.Runtime.win-x86",
             "version": "[8.0.17, 8.0.17]"
           }
         ],
@@ -1839,7 +1839,7 @@
       }
     },
     "runtimes": {
-      "win-x64": {
+      "win-x86": {
         "#import": []
       }
     }

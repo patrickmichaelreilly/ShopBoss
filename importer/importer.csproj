@@ -7,12 +7,17 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Importer</AssemblyName>
     <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Data.SQLite" Version="1.0.119" />
     <PackageReference Include="System.Text.Json" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="native\*.dll" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="native\*.exe" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

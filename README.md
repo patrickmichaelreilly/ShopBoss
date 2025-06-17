@@ -9,7 +9,7 @@ Shop Floor Part Tracking System to replace discontinued Production Coach softwar
 **Build (WSL/Linux):**
 ```bash
 cd importer
-dotnet publish -c Release -r win-x64
+dotnet publish -c Release -r win-x86
 ```
 
 **Setup (Windows 11):**
@@ -17,9 +17,12 @@ dotnet publish -c Release -r win-x64
 2. Extract and place `ExportSqlCE40.exe` in the `/tools/` directory
 
 **Run (Windows 11 CMD/PowerShell):**
-```cmd
-# Navigate to the publish directory
-cd importer\bin\Release\net8.0\win-x64\publish
+```powershell
+# Direct run from staged location
+C:\ShopBoss\Importer\Importer.exe C:\ShopBoss\Importer\MicrovellumWorkOrder.sdf
+
+# Or navigate to the publish directory
+cd importer\bin\Release\net8.0\win-x86\publish
 
 # Import SDF file (automatic conversion to SQLite)
 .\Importer.exe path\to\your\file.sdf
@@ -37,7 +40,8 @@ cd importer\bin\Release\net8.0\win-x64\publish
 3. SQLite database is queried for JSON output
 
 **Requirements:** 
-- No native SQL CE DLLs required
+- [Visual C++ 2010 SP1 Redistributable Package (x86)](https://www.microsoft.com/en-us/download/details.aspx?id=26999)
+- Native SQL CE DLLs included (x86 versions)
 - Works in WSL when using pre-converted .sqlite files
 - ExportSqlCE40.exe tool from [Erik EJ's SqlCeToolbox](https://github.com/ErikEJ/SqlCeToolbox)
 
