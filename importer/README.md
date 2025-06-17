@@ -2,16 +2,20 @@
 
 Converts SQL Server Compact (SDF) files to JSON format via SQLite conversion.
 
-## Usage
+## Build & Run
 
 ```bash
+# Build and publish
+dotnet publish -c Release -r win-x86 --self-contained
+
+# Run
 C:\ShopBoss\Importer\Importer.exe C:\ShopBoss\MicrovellumWorkOrder.sdf
 ```
 
 ## How it works
 
-1. **ExportSqlCe40.exe** → converts SDF to SQL script(s)
-2. **sqlite3.exe** → imports SQL scripts into SQLite database
-3. **System.Data.SQLite** → reads SQLite database and outputs JSON
+1. **native\ExportSqlCe40.exe** → converts SDF to single temp.sql file
+2. **native\sqlite3.exe** → creates work.sqlite from temp.sql 
+3. **System.Data.SQLite** → reads work.sqlite and outputs JSON (six keys)
 
-All native binaries are included in the published output.
+All native binaries are included in the published output. Creates only work.sqlite (no chunk files).

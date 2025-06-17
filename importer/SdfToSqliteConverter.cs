@@ -8,7 +8,7 @@ public class SdfToSqliteConverter
 
     public SdfToSqliteConverter(string? toolsDirectory = null)
     {
-        _toolsDirectory = toolsDirectory ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "native");
+        _toolsDirectory = toolsDirectory ?? Path.Combine(AppContext.BaseDirectory, "native");
     }
 
     public async Task<string> ConvertAsync(string sdfPath)
@@ -19,9 +19,8 @@ public class SdfToSqliteConverter
         }
 
         var sdfDirectory = Path.GetDirectoryName(sdfPath) ?? throw new InvalidOperationException("Cannot determine SDF directory");
-        var sdfFileName = Path.GetFileNameWithoutExtension(sdfPath);
-        var sqliteFilePath = Path.Combine(sdfDirectory, $"{sdfFileName}.sqlite");
-        var tempSqlPath = Path.Combine(sdfDirectory, $"{sdfFileName}_temp.sql");
+        var sqliteFilePath = Path.Combine(sdfDirectory, "work.sqlite");
+        var tempSqlPath = Path.Combine(sdfDirectory, "temp.sql");
 
         try
         {
@@ -56,7 +55,7 @@ public class SdfToSqliteConverter
         
         using var process = new Process();
         process.StartInfo.FileName = exportTool;
-        process.StartInfo.Arguments = $"\"{connectionString}\" \"{sqlPath}\"";
+        process.StartInfo.Arguments = $"\"{connectionString}\" \"{sqlPath}\" sqlite";
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
@@ -88,76 +87,29 @@ public class SdfToSqliteConverter
             File.Delete(sqliteFilePath);
         }
 
-        // Use sqlite3 command line tool if available, otherwise skip this step
-        // In a real implementation, we might use System.Data.SQLite to execute the script
-        var sqlite3Path = FindSqlite3Executable();
+        var sqlite3Path = Path.Combine(_toolsDirectory, "sqlite3.exe");
         
-        if (!string.IsNullOrEmpty(sqlite3Path))
+        if (!File.Exists(sqlite3Path))
         {
-            using var process = new Process();
-            process.StartInfo.FileName = sqlite3Path;
-            process.StartInfo.Arguments = $"\"{sqliteFilePath}\" \".read {sqlPath}\"";
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.CreateNoWindow = true;
-
-            process.Start();
-            await process.WaitForExitAsync();
-
-            if (process.ExitCode != 0)
-            {
-                var error = await process.StandardError.ReadToEndAsync();
-                throw new InvalidOperationException($"sqlite3 failed with exit code {process.ExitCode}. Error: {error}");
-            }
+            throw new FileNotFoundException($"sqlite3.exe not found at: {sqlite3Path}. Please ensure native binaries are included.");
         }
-        else
+
+        using var process = new Process();
+        process.StartInfo.FileName = sqlite3Path;
+        process.StartInfo.Arguments = $"\"{sqliteFilePath}\" \".read {sqlPath}\"";
+        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.RedirectStandardError = true;
+        process.StartInfo.CreateNoWindow = true;
+
+        process.Start();
+        await process.WaitForExitAsync();
+
+        if (process.ExitCode != 0)
         {
-            // Fallback: Create empty SQLite database for testing
-            // In practice, the SQL script would need to be executed manually
-            using var connection = new System.Data.SQLite.SQLiteConnection($"Data Source={sqliteFilePath};Version=3;");
-            connection.Open();
-            // The database file is created by opening the connection
+            var error = await process.StandardError.ReadToEndAsync();
+            throw new InvalidOperationException($"sqlite3 failed with exit code {process.ExitCode}. Error: {error}");
         }
     }
 
-    private string? FindSqlite3Executable()
-    {
-        // Try native directory first, then common locations for sqlite3 executable
-        var commonPaths = new[]
-        {
-            Path.Combine(_toolsDirectory, "sqlite3.exe"),
-            "sqlite3",
-            "sqlite3.exe",
-            @"C:\Program Files\SQLite\sqlite3.exe",
-            @"C:\SQLite\sqlite3.exe"
-        };
-
-        foreach (var path in commonPaths)
-        {
-            try
-            {
-                using var process = new Process();
-                process.StartInfo.FileName = path;
-                process.StartInfo.Arguments = "--version";
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.CreateNoWindow = true;
-                
-                process.Start();
-                process.WaitForExit(2000); // 2 second timeout
-                
-                if (process.ExitCode == 0)
-                {
-                    return path;
-                }
-            }
-            catch
-            {
-                // Continue trying other paths
-            }
-        }
-
-        return null;
-    }
 }
