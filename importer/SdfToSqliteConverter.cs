@@ -13,14 +13,26 @@ public class SdfToSqliteConverter
 
     public async Task<string> ConvertAsync(string sdfPath)
     {
+        Console.WriteLine($"Debug: ConvertAsync called with sdfPath: '{sdfPath}'");
+        
         if (!File.Exists(sdfPath))
         {
             throw new FileNotFoundException($"SDF file not found: {sdfPath}");
         }
 
-        var sdfDirectory = Path.GetDirectoryName(sdfPath) ?? throw new InvalidOperationException("Cannot determine SDF directory");
+        var sdfDirectory = Path.GetDirectoryName(sdfPath);
+        Console.WriteLine($"Debug: sdfDirectory from Path.GetDirectoryName: '{sdfDirectory}'");
+        
+        if (string.IsNullOrEmpty(sdfDirectory))
+        {
+            throw new InvalidOperationException("Cannot determine SDF directory - Path.GetDirectoryName returned null/empty");
+        }
+
         var sqliteFilePath = Path.Combine(sdfDirectory, "work.sqlite");
         var tempSqlPath = Path.Combine(sdfDirectory, "temp.sql");
+        
+        Console.WriteLine($"Debug: sqliteFilePath: '{sqliteFilePath}'");
+        Console.WriteLine($"Debug: tempSqlPath: '{tempSqlPath}'");
 
         try
         {
@@ -82,9 +94,28 @@ public class SdfToSqliteConverter
 
     private async Task CombineSqlFiles(string directory, string outputPath)
     {
+        if (string.IsNullOrEmpty(directory))
+        {
+            throw new ArgumentException("Directory path cannot be null or empty", nameof(directory));
+        }
+        
+        if (string.IsNullOrEmpty(outputPath))
+        {
+            throw new ArgumentException("Output path cannot be null or empty", nameof(outputPath));
+        }
+
+        Console.WriteLine($"Debug: Looking for work_*.sql files in directory: {directory}");
+        Console.WriteLine($"Debug: Output path: {outputPath}");
+
         var workFiles = Directory.GetFiles(directory, "work_*.sql")
                                 .OrderBy(f => f)
                                 .ToArray();
+
+        Console.WriteLine($"Debug: Found {workFiles.Length} work files");
+        foreach (var file in workFiles)
+        {
+            Console.WriteLine($"Debug: Found file: {file}");
+        }
 
         if (workFiles.Length == 0)
         {
@@ -95,13 +126,17 @@ public class SdfToSqliteConverter
         
         foreach (var workFile in workFiles)
         {
+            Console.WriteLine($"Debug: Processing file: {workFile}");
             var content = await File.ReadAllTextAsync(workFile);
             await outputWriter.WriteAsync(content);
             await outputWriter.WriteLineAsync(); // Add newline between files
             
             // Clean up the work file
             File.Delete(workFile);
+            Console.WriteLine($"Debug: Deleted file: {workFile}");
         }
+        
+        Console.WriteLine($"Debug: Combined SQL written to: {outputPath}");
     }
 
     private async Task CreateSqliteFromScript(string sqlPath, string sqliteFilePath)
