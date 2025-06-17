@@ -8,7 +8,7 @@ public class SdfToSqliteConverter
 
     public SdfToSqliteConverter(string? toolsDirectory = null)
     {
-        _toolsDirectory = toolsDirectory ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "tools");
+        _toolsDirectory = toolsDirectory ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "native");
     }
 
     public async Task<string> ConvertAsync(string sdfPath)
@@ -45,11 +45,11 @@ public class SdfToSqliteConverter
 
     private async Task ConvertSdfToSqlScript(string sdfPath, string sqlPath)
     {
-        var exportTool = Path.Combine(_toolsDirectory, "ExportSqlCE40.exe");
+        var exportTool = Path.Combine(_toolsDirectory, "ExportSqlCe40.exe");
         
         if (!File.Exists(exportTool))
         {
-            throw new FileNotFoundException($"ExportSqlCE40.exe not found at: {exportTool}. Please download from https://github.com/ErikEJ/SqlCeToolbox/releases");
+            throw new FileNotFoundException($"ExportSqlCe40.exe not found at: {exportTool}. Please ensure native binaries are included.");
         }
 
         var connectionString = $"Data Source={sdfPath};";
@@ -71,7 +71,7 @@ public class SdfToSqliteConverter
 
         if (process.ExitCode != 0)
         {
-            throw new InvalidOperationException($"ExportSqlCE40.exe failed with exit code {process.ExitCode}. Error: {error}");
+            throw new InvalidOperationException($"ExportSqlCe40.exe failed with exit code {process.ExitCode}. Error: {error}");
         }
 
         if (!File.Exists(sqlPath))
@@ -123,9 +123,10 @@ public class SdfToSqliteConverter
 
     private string? FindSqlite3Executable()
     {
-        // Try common locations for sqlite3 executable
+        // Try native directory first, then common locations for sqlite3 executable
         var commonPaths = new[]
         {
+            Path.Combine(_toolsDirectory, "sqlite3.exe"),
             "sqlite3",
             "sqlite3.exe",
             @"C:\Program Files\SQLite\sqlite3.exe",
