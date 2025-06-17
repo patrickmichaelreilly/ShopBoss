@@ -74,10 +74,25 @@ public class SdfToSqliteConverter
 
         process.Start();
         
+        // Add timeout to prevent hanging
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        try
+        {
+            await process.WaitForExitAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Kill the process if it's hanging
+            if (!process.HasExited)
+            {
+                process.Kill();
+                await process.WaitForExitAsync(); // Wait for kill to complete
+            }
+            throw new InvalidOperationException("ExportSqlCe40.exe process timed out after 60 seconds");
+        }
+        
         var output = await process.StandardOutput.ReadToEndAsync();
         var error = await process.StandardError.ReadToEndAsync();
-        
-        await process.WaitForExitAsync();
 
         if (process.ExitCode != 0)
         {
@@ -153,7 +168,23 @@ public class SdfToSqliteConverter
         process.StartInfo.CreateNoWindow = true;
 
         process.Start();
-        await process.WaitForExitAsync();
+        
+        // Add timeout to prevent hanging
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        try
+        {
+            await process.WaitForExitAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Kill the process if it's hanging
+            if (!process.HasExited)
+            {
+                process.Kill();
+                await process.WaitForExitAsync(); // Wait for kill to complete
+            }
+            throw new InvalidOperationException("sqlite3 process timed out after 30 seconds");
+        }
 
         if (process.ExitCode != 0)
         {
