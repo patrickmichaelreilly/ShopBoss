@@ -13,4 +13,4 @@
 
 **Constraints** – Touch only `/importer/` and `README.md`; keep code logic unchanged.
 
-<!-- AI Code Agent will append: **Status: Completed – …** -->
+**Status: Completed** – Removed `PublishSingleFile` and `IncludeNativeLibrariesForSelfExtract` properties from project file. The `dotnet publish -c Release -r win-x64` command now produces a publish folder with `Importer.exe`, all managed assemblies, and the six native SQL CE DLLs. Updated README.md to reflect the simplified build command without single-file flags. Native DLLs are now properly discoverable at runtime for SQL CE initialization.

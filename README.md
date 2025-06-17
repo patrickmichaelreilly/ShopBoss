@@ -4,12 +4,12 @@ Shop Floor Part Tracking System to replace discontinued Production Coach softwar
 
 ## Quick Start
 
-### SDF Importer v2 (Self-Contained EXE)
+### SDF Importer v2 (Self-Contained Distribution)
 
 **Build (WSL/Linux):**
 ```bash
 cd importer
-dotnet publish -c Release -r win-x64 /p:PublishSingleFile=true /p:SelfContained=true
+dotnet publish -c Release -r win-x64
 ```
 
 **Run (Windows 11 CMD/PowerShell):**
