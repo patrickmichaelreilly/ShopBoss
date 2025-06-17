@@ -161,16 +161,20 @@ public class SdfToSqliteConverter
 
         using var process = new Process();
         process.StartInfo.FileName = sqlite3Path;
-        process.StartInfo.Arguments = $"\"{sqliteFilePath}\" \".read {sqlPath}\"";
+        process.StartInfo.Arguments = $"\"{sqliteFilePath}\" \".read {sqlPath}\" \".quit\"";
         process.StartInfo.UseShellExecute = false;
+        process.StartInfo.RedirectStandardInput = true;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.CreateNoWindow = true;
 
         process.Start();
         
+        // Close stdin immediately to prevent hanging
+        process.StandardInput.Close();
+        
         // Add timeout to prevent hanging
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         try
         {
             await process.WaitForExitAsync(cts.Token);
@@ -183,7 +187,7 @@ public class SdfToSqliteConverter
                 process.Kill();
                 await process.WaitForExitAsync(); // Wait for kill to complete
             }
-            throw new InvalidOperationException("sqlite3 process timed out after 30 seconds");
+            throw new InvalidOperationException("sqlite3 process timed out after 10 seconds");
         }
 
         if (process.ExitCode != 0)
