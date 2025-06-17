@@ -24,7 +24,7 @@ cd importer\bin\Release\net8.0\win-x64\publish
 .\Importer.exe --self-check
 ```
 
-**SQL CE Requirements:** The SQL Server Compact native DLLs (`sqlcese40.dll`, `sqlceqp40.dll`) must be available in the system PATH or copied next to `Importer.exe`. These are typically installed with SQL Server Compact 4.0 Runtime.
+**SQL CE Requirements:** The required SQL Server Compact native DLLs (`sqlcese40.dll`, `sqlceqp40.dll`, `sqlceer40EN.dll`) are automatically included in the publish output.
 
 **Output:** JSON with six top-level keys: `products`, `parts`, `placedSheets`, `hardware`, `subassemblies`, `optimizationResults`.
 
