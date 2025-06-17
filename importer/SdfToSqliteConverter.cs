@@ -109,10 +109,11 @@ public class SdfToSqliteConverter
             throw new ArgumentException("Output path cannot be null or empty", nameof(outputPath));
         }
 
-        Console.WriteLine($"Debug: Looking for work_*.sql files in directory: {directory}");
+        Console.WriteLine($"Debug: Looking for work_* files in directory: {directory}");
         Console.WriteLine($"Debug: Output path: {outputPath}");
 
-        var workFiles = Directory.GetFiles(directory, "work_*.sql")
+        var workFiles = Directory.GetFiles(directory, "work_*")
+                                .Where(f => !Path.HasExtension(f) || Path.GetExtension(f) == ".sql")
                                 .OrderBy(f => f)
                                 .ToArray();
 
@@ -124,7 +125,7 @@ public class SdfToSqliteConverter
 
         if (workFiles.Length == 0)
         {
-            throw new InvalidOperationException($"No SQL files found with pattern work_*.sql in directory {directory}");
+            throw new InvalidOperationException($"No files found with pattern work_* in directory {directory}");
         }
 
         using var outputWriter = new StreamWriter(outputPath);
