@@ -39,7 +39,7 @@ public class SdfToSqliteConverter
         try
         {
             // Step 1: Convert SDF to SQL script using ExportSqlCE40.exe
-            await ConvertSdfToSqlScript(sdfPath, tempSqlPath);
+            await ConvertSdfToSqlScript(sdfPath, tempSqlPath, sdfDirectory);
 
             // Step 2: Create SQLite database from SQL script
             await CreateSqliteFromScript(tempSqlPath, sqliteFilePath);
@@ -56,7 +56,7 @@ public class SdfToSqliteConverter
         }
     }
 
-    private async Task ConvertSdfToSqlScript(string sdfPath, string sqlPath)
+    private async Task ConvertSdfToSqlScript(string sdfPath, string sqlPath, string workingDirectory)
     {
         var exportTool = Path.Combine(_toolsDirectory, "ExportSqlCe40.exe");
         
@@ -66,8 +66,11 @@ public class SdfToSqliteConverter
         }
 
         var connectionString = $"Data Source={sdfPath};";
-        var sdfDirectory = Path.GetDirectoryName(sdfPath) ?? throw new InvalidOperationException("Cannot determine SDF directory");
-        var baseWorkPath = Path.Combine(sdfDirectory, "work");
+        var baseWorkPath = Path.Combine(workingDirectory, "work");
+        
+        Console.WriteLine($"Debug: connectionString: '{connectionString}'");
+        Console.WriteLine($"Debug: baseWorkPath: '{baseWorkPath}'");
+        Console.WriteLine($"Debug: workingDirectory: '{workingDirectory}'");
         
         using var process = new Process();
         process.StartInfo.FileName = exportTool;
@@ -91,7 +94,7 @@ public class SdfToSqliteConverter
 
         // ExportSqlCe40.exe creates files like work_0000.sql, work_0001.sql, etc.
         // We need to combine them into a single temp.sql file
-        await CombineSqlFiles(sdfDirectory, sqlPath);
+        await CombineSqlFiles(workingDirectory, sqlPath);
     }
 
     private async Task CombineSqlFiles(string directory, string outputPath)
