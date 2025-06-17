@@ -203,8 +203,8 @@ public class SdfToSqliteConverter
         // Close stdin immediately to prevent hanging
         process.StandardInput.Close();
         
-        // Add timeout to prevent hanging
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        // Add timeout to prevent hanging - increased for large SQL files
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         try
         {
             await process.WaitForExitAsync(cts.Token);
@@ -217,7 +217,7 @@ public class SdfToSqliteConverter
                 process.Kill();
                 await process.WaitForExitAsync(); // Wait for kill to complete
             }
-            throw new InvalidOperationException("sqlite3 process timed out after 30 seconds - large SQL file may need more time");
+            throw new InvalidOperationException("sqlite3 process timed out after 5 minutes - very large SQL file");
         }
 
         var output = await outputTask;
