@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Importer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2c8b20a08cd06ba1fa8ed228fa0d6408a511c18f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c31e330014d116c28f6ffc53986dd5f0cf9cc6a8")]
 [assembly: System.Reflection.AssemblyProductAttribute("Importer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Importer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

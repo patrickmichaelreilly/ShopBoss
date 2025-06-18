@@ -59,11 +59,10 @@ public class Program
             if (!string.IsNullOrEmpty(outputPath) && outputPath.EndsWith(".sqlite", StringComparison.OrdinalIgnoreCase))
             {
                 var sqliteResult = await importer.ImportToSqliteAsync(filePath, outputPath);
-                Console.WriteLine($"SQLite database created: {outputPath}");
-                Console.WriteLine($"Tables processed: {sqliteResult.TablesProcessed}");
-                Console.WriteLine($"Total rows: {sqliteResult.TotalRows}");
-                Console.WriteLine($"Total time: {sqliteResult.TotalTime:F2}s");
-                Console.WriteLine($"File size: {new FileInfo(outputPath).Length:N0} bytes");
+                var fileSize = new FileInfo(outputPath).Length;
+                Console.Error.WriteLine($"SQLite database created: {outputPath} ({fileSize / 1024.0 / 1024.0:F1} MB)");
+                Console.Error.WriteLine($"Processed {sqliteResult.TablesProcessed} tables, {sqliteResult.TotalRows:N0} rows in {sqliteResult.TotalTime:F1}s");
+                Console.Error.WriteLine("Import completed successfully");
                 return 0;
             }
             
@@ -79,19 +78,25 @@ public class Program
             if (!string.IsNullOrEmpty(outputPath))
             {
                 await File.WriteAllTextAsync(outputPath, json);
-                Console.WriteLine($"JSON written to: {outputPath}");
-                Console.WriteLine($"File size: {new FileInfo(outputPath).Length:N0} bytes");
+                var fileSize = new FileInfo(outputPath).Length;
+                Console.Error.WriteLine($"JSON written to: {outputPath} ({fileSize / 1024.0 / 1024.0:F1} MB)");
             }
             else
             {
                 Console.WriteLine(json);
             }
             
-            // Verify the output structure
+            // Verify the output structure (only show success for file output)
             if (!JsonStructureTest.VerifyJsonStructure(json))
             {
                 Console.Error.WriteLine("JSON structure validation failed");
                 return 1;
+            }
+            
+            // Only show success message for file output (stdout is the data itself)
+            if (!string.IsNullOrEmpty(outputPath))
+            {
+                Console.Error.WriteLine("Import completed successfully");
             }
             
             return 0;
@@ -127,20 +132,14 @@ public class SdfImporter
         await connection.OpenAsync();
         
         var startTime = DateTime.Now;
-        Console.Error.WriteLine($"Starting import of {RequiredTables.Length} tables...");
+        Console.Error.WriteLine("Extracting data from 6 required tables...");
         
         var result = new ImportResult();
         var totalRows = 0;
         
         foreach (var tableName in RequiredTables)
         {
-            var tableStartTime = DateTime.Now;
-            Console.Error.Write($"Processing {tableName}... ");
-            
             var tableData = await ReadTableAsync(connection, tableName);
-            var duration = (DateTime.Now - tableStartTime).TotalSeconds;
-            
-            Console.Error.WriteLine($"{tableData.Count:N0} rows in {duration:F2}s");
             totalRows += tableData.Count;
             
             // Assign to appropriate property
@@ -156,7 +155,7 @@ public class SdfImporter
         }
         
         var totalTime = (DateTime.Now - startTime).TotalSeconds;
-        Console.Error.WriteLine($"Import completed: {totalRows:N0} total rows in {totalTime:F2}s");
+        Console.Error.WriteLine($"Processed 6 tables, {totalRows:N0} total rows in {totalTime:F1}s");
         
         return result;
     }
@@ -192,7 +191,6 @@ public class SdfImporter
                 var count = Convert.ToInt32(await command.ExecuteScalarAsync());
                 totalRows += count;
                 tablesProcessed++;
-                Console.Error.WriteLine($"{tableName}: {count:N0} rows");
             }
             catch (Exception ex)
             {
@@ -281,7 +279,6 @@ public class SdfImporter
                 // Skip binary/blob columns and known binary column names
                 if (IsBinaryColumn(columnName, columnType))
                 {
-                    Console.Error.WriteLine($"  Skipping binary column: {columnName} ({columnType})");
                     continue;
                 }
                 

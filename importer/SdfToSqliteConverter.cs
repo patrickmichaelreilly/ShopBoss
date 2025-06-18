@@ -147,12 +147,10 @@ public class SdfToSqliteConverter
 
     private async Task CleanSqlForSqlite(string sqlPath)
     {
-        Console.Error.WriteLine($"Starting SQL cleanup for: {sqlPath}");
-        
         // Read the entire SQL file
         var content = await File.ReadAllTextAsync(sqlPath);
         var originalSize = content.Length;
-        Console.Error.WriteLine($"Original SQL file size: {originalSize:N0} characters");
+        Console.Error.WriteLine($"Cleaning SQL file ({originalSize / 1024 / 1024:F1} MB)...");
         
         // Fix common SQL Server Compact -> SQLite compatibility issues
         content = content
@@ -171,7 +169,8 @@ public class SdfToSqliteConverter
             .Replace("((1))", "1")
             .Replace("((0))", "0");
         
-        Console.Error.WriteLine("Basic SQL replacements completed");
+        // Fix SQL Server timestamp syntax for SQLite
+        content = FixTimestampSyntax(content);
         
         // Remove large hex literals that cause SQLite issues
         content = RemoveLargeHexLiterals(content);
@@ -183,17 +182,15 @@ public class SdfToSqliteConverter
         content = HandleDuplicateIndexes(content);
         
         var finalSize = content.Length;
-        Console.Error.WriteLine($"Final SQL file size: {finalSize:N0} characters (reduced by {originalSize - finalSize:N0})");
+        var reductionMB = (originalSize - finalSize) / 1024.0 / 1024.0;
+        Console.Error.WriteLine($"SQL cleanup completed (reduced by {reductionMB:F1} MB)");
         
         // Write the cleaned content back
         await File.WriteAllTextAsync(sqlPath, content);
-        Console.Error.WriteLine("SQL cleanup completed");
     }
     
     private string RemoveLargeHexLiterals(string content)
     {
-        Console.Error.WriteLine("Starting hex literal cleanup...");
-        
         // Pattern to match hex literals (0x followed by hex digits)
         // Replace large hex literals (>100 chars) with NULL
         var lines = content.Split('\n');
@@ -215,24 +212,21 @@ public class SdfToSqliteConverter
                 {
                     cleanedLine = cleanedLine.Replace(match.Value, "NULL");
                     replacementCount++;
-                    if (replacementCount <= 5) // Only show first 5 to avoid spam
-                    {
-                        Console.Error.WriteLine($"  Replaced hex literal ({match.Value.Length} chars) with NULL");
-                    }
                 }
             }
             
             result.AppendLine(cleanedLine);
         }
         
-        Console.Error.WriteLine($"Hex literal cleanup completed: {replacementCount} large hex literals replaced");
+        if (replacementCount > 0)
+        {
+            Console.Error.WriteLine($"Cleaned {replacementCount} binary data columns");
+        }
         return result.ToString();
     }
     
     private string FixConstraintSyntax(string content)
     {
-        Console.Error.WriteLine("Starting constraint syntax cleanup...");
-        
         // SQLite doesn't support ALTER TABLE ADD CONSTRAINT for PRIMARY KEY
         // Remove these lines entirely as primary keys should be defined in CREATE TABLE
         var lines = content.Split('\n');
@@ -245,24 +239,17 @@ public class SdfToSqliteConverter
             if (line.Trim().StartsWith("ALTER TABLE") && line.Contains("ADD CONSTRAINT") && line.Contains("PRIMARY KEY"))
             {
                 removedCount++;
-                if (removedCount <= 3) // Only show first 3 to avoid spam
-                {
-                    Console.Error.WriteLine($"  Skipping unsupported constraint: {line.Trim()}");
-                }
                 continue;
             }
             
             result.AppendLine(line);
         }
         
-        Console.Error.WriteLine($"Constraint cleanup completed: {removedCount} unsupported constraints removed");
         return result.ToString();
     }
     
     private string HandleDuplicateIndexes(string content)
     {
-        Console.Error.WriteLine("Starting duplicate index cleanup...");
-        
         // Track created indexes to avoid duplicates
         var createdIndexes = new HashSet<string>();
         var lines = content.Split('\n');
@@ -285,10 +272,6 @@ public class SdfToSqliteConverter
                     if (createdIndexes.Contains(indexName))
                     {
                         duplicatesSkipped++;
-                        if (duplicatesSkipped <= 5) // Only show first 5 to avoid spam
-                        {
-                            Console.Error.WriteLine($"  Skipping duplicate index: {indexName}");
-                        }
                         continue;
                     }
                     
@@ -299,8 +282,24 @@ public class SdfToSqliteConverter
             result.AppendLine(line);
         }
         
-        Console.Error.WriteLine($"Index cleanup completed: {duplicatesSkipped} duplicate indexes removed");
         return result.ToString();
+    }
+    
+    private string FixTimestampSyntax(string content)
+    {
+        // Replace SQL Server {ts 'timestamp'} syntax with SQLite 'timestamp' format
+        var timestampPattern = @"\{ts\s+'([^']+)'\}";
+        var matches = System.Text.RegularExpressions.Regex.Matches(content, timestampPattern);
+        var replacementCount = 0;
+        
+        foreach (System.Text.RegularExpressions.Match match in matches)
+        {
+            // Replace {ts 'timestamp'} with just 'timestamp'
+            content = content.Replace(match.Value, $"'{match.Groups[1].Value}'");
+            replacementCount++;
+        }
+        
+        return content;
     }
 
     private async Task CreateSqliteFromScript(string sqlPath, string sqliteFilePath)

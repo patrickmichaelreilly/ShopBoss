@@ -43,7 +43,7 @@ public static class JsonStructureTest
                 return false;
             }
             
-            Console.WriteLine("SUCCESS: JSON structure contains all six required keys");
+            // JSON structure validation passed (silent success)
             return true;
         }
         catch (JsonException ex)
