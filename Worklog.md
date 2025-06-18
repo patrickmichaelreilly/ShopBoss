@@ -37,3 +37,38 @@ This file contains the chronological development log and task prompts for the Sh
 **Out of Scope** – Schema migrations, Entity Framework, persistent DB, web server, rack logic, assembly/shipping features.
 
 **Status: Completed** – POC SDF importer implemented with .NET 8 Console App using Microsoft.SqlServer.Compact package. Application builds successfully in WSL, includes JSON structure validation, and provides both main import functionality and self-check test. Ready for Windows 11 execution testing.
+
+---
+
+### 2025-06-18 – Phase 1: Complete Importer Optimization
+
+**Goal** – Optimize the ShopBoss importer for performance and add output customization to prepare for ShopBoss v2 integration.
+
+**Phase 1 Requirements:**
+• **Hardcoded Table & Column Filtering**
+  - Hardcode the 6 required tables in ImportAsync(): Products, Parts, PlacedSheets, Hardware, Subassemblies, OptimizationResults
+  - Add column introspection to ReadTableAsync() to skip BLOB/binary columns (JPegStream, TiffStream, WMFStream, WorkBook, etc.)
+  - Use explicit SELECT with only text/numeric columns instead of SELECT *
+  - Keep graceful error handling for missing tables
+
+• **Output Path Customization** 
+  - Add --output parameter to Program.cs with validation
+  - .sqlite extension: output SQLite database directly (skip JSON conversion)
+  - .json extension: write JSON to file instead of stdout
+  - No --output: maintain current stdout behavior
+
+• **Performance Monitoring**
+  - Time each table import and report duration
+  - Count and report rows processed per table  
+  - Report final file sizes (JSON/SQLite)
+  - Add simple progress indicators during import
+
+**Expected Impact:** Eliminating BLOB columns and unnecessary table processing should dramatically improve performance, making incremental import unnecessary.
+
+**Status: Completed** – All Phase 1 optimizations implemented:
+- Hardcoded 6 required tables with explicit column filtering
+- Binary/BLOB column detection and exclusion (JPegStream, TiffStream, WMFStream, WorkBook, etc.)
+- Added --output parameter supporting .sqlite and .json file outputs
+- Comprehensive performance monitoring with timing, row counts, and file size reporting
+- Enhanced error handling with graceful degradation for missing tables
+- Application builds successfully for Windows (win-x86) target platform
