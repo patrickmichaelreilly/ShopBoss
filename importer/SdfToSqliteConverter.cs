@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace SdfImporter;
 
@@ -166,8 +167,106 @@ public class SdfToSqliteConverter
             .Replace("((1))", "1")
             .Replace("((0))", "0");
         
+        // Remove large hex literals that cause SQLite issues
+        content = RemoveLargeHexLiterals(content);
+        
+        // Fix SQLite constraint syntax
+        content = FixConstraintSyntax(content);
+        
+        // Handle duplicate index creation
+        content = HandleDuplicateIndexes(content);
+        
         // Write the cleaned content back
         await File.WriteAllTextAsync(sqlPath, content);
+    }
+    
+    private string RemoveLargeHexLiterals(string content)
+    {
+        // Pattern to match hex literals (0x followed by hex digits)
+        // Replace large hex literals (>100 chars) with NULL
+        var lines = content.Split('\n');
+        var result = new StringBuilder();
+        
+        foreach (var line in lines)
+        {
+            var cleanedLine = line;
+            
+            // Look for hex literals that are too large
+            var hexPattern = @"0x[0-9A-Fa-f]+";
+            var matches = System.Text.RegularExpressions.Regex.Matches(line, hexPattern);
+            
+            foreach (System.Text.RegularExpressions.Match match in matches)
+            {
+                // If hex literal is very long (likely binary data), replace with NULL
+                if (match.Value.Length > 100)
+                {
+                    cleanedLine = cleanedLine.Replace(match.Value, "NULL");
+                    Console.Error.WriteLine($"Replaced large hex literal ({match.Value.Length} chars) with NULL");
+                }
+            }
+            
+            result.AppendLine(cleanedLine);
+        }
+        
+        return result.ToString();
+    }
+    
+    private string FixConstraintSyntax(string content)
+    {
+        // SQLite doesn't support ALTER TABLE ADD CONSTRAINT for PRIMARY KEY
+        // Remove these lines entirely as primary keys should be defined in CREATE TABLE
+        var lines = content.Split('\n');
+        var result = new StringBuilder();
+        
+        foreach (var line in lines)
+        {
+            // Skip ALTER TABLE ADD CONSTRAINT PRIMARY KEY lines
+            if (line.Trim().StartsWith("ALTER TABLE") && line.Contains("ADD CONSTRAINT") && line.Contains("PRIMARY KEY"))
+            {
+                Console.Error.WriteLine($"Skipping unsupported constraint: {line.Trim()}");
+                continue;
+            }
+            
+            result.AppendLine(line);
+        }
+        
+        return result.ToString();
+    }
+    
+    private string HandleDuplicateIndexes(string content)
+    {
+        // Track created indexes to avoid duplicates
+        var createdIndexes = new HashSet<string>();
+        var lines = content.Split('\n');
+        var result = new StringBuilder();
+        
+        foreach (var line in lines)
+        {
+            var trimmedLine = line.Trim();
+            
+            // Check for CREATE INDEX statements
+            if (trimmedLine.StartsWith("CREATE INDEX", StringComparison.OrdinalIgnoreCase))
+            {
+                // Extract index name
+                var parts = trimmedLine.Split(' ');
+                if (parts.Length >= 3)
+                {
+                    var indexName = parts[2].Trim('"');
+                    
+                    if (createdIndexes.Contains(indexName))
+                    {
+                        Console.Error.WriteLine($"Skipping duplicate index: {indexName}");
+                        continue;
+                    }
+                    
+                    createdIndexes.Add(indexName);
+                }
+            }
+            
+            result.AppendLine(line);
+        }
+        
+        return result.ToString();
     }
 
     private async Task CreateSqliteFromScript(string sqlPath, string sqliteFilePath)
